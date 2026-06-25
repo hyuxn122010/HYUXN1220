@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정부24 - 완성본 (용량 압축 및 저장 버그 수정)</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="정부24">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-fade-in { animation: fadeIn 0.15s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-active-scale:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex justify-center items-center min-h-screen m-0 p-0 select-none">
+
+    <div class="w-full max-w-[420px] bg-[#f4f6f9] min-h-screen shadow-2xl flex flex-col font-sans relative overflow-x-hidden">
+        
+        <div class="flex justify-between items-center px-6 pt-3 pb-1 text-xs font-bold text-gray-800 bg-transparent z-50 w-full">
+            <span id="realtime-clock">--:--</span>
+            <div></div>
+        </div>
+
+        <div id="screen-home" class="screen-content flex flex-col flex-1 pb-20 overflow-y-auto no-scrollbar animate-fade-in">
+            <header class="flex justify-between items-center px-5 py-2.5">
+                <div class="flex items-center space-x-1.5">
+                    <div class="w-5 h-5 rounded-full bg-gradient-to-r from-red-500 to-blue-600 relative overflow-hidden flex flex-col">
+                        <div class="w-full h-1/2 bg-[#ea4335]"></div>
+                        <div class="w-full h-1/2 bg-[#4285f4]"></div>
+                    </div>
+                    <span class="font-extrabold text-lg text-gray-800 tracking-tight">정부24<span class="text-xs text-red-500 font-bold ml-0.5">+</span></span>
+                </div>
+                <div class="flex items-center space-x-4 text-gray-600 text-xs font-medium">
+                    <div class="flex flex-col items-center"><span class="material-icons text-lg text-blue-600">smart_toy</span><span class="text-[10px] mt-0.5">정부24 AI</span></div>
+                    <div class="flex flex-col items-center"><span class="material-icons text-lg">login</span><span class="text-[10px] mt-0.5">로그인</span></div>
+                    <div onclick="openSettings()" class="flex flex-col items-center cursor-pointer hover:text-blue-600"><span class="material-icons text-lg">menu</span><span class="text-[10px] mt-0.5">전체메뉴</span></div>
+                </div>
+            </header>
+
+            <main class="px-4 mt-1 space-y-4">
+                <div class="bg-white rounded-xl p-3.5 flex items-center justify-between shadow-sm border border-gray-50">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm">📢</span>
+                        <span class="text-xs font-bold text-orange-500">공지사항 확인하기</span>
+                    </div>
+                    <span class="material-icons text-gray-400 text-sm">chevron_right</span>
+                </div>
+
+                <div class="bg-white rounded-full p-2.5 flex items-center justify-between shadow-md border border-blue-300">
+                    <div class="flex items-center space-x-2 pl-2 flex-1">
+                        <div class="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center text-sm">👶</div>
+                        <input type="text" id="google-search-input" placeholder="안녕하세요. 무엇을 알고 싶으세요?" class="w-full text-sm text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent font-medium" onkeypress="if(event.key==='Enter') executeSearch()">
+                    </div>
+                    <button onclick="executeSearch()"><span class="material-icons text-blue-600 text-2xl pr-1">search</span></button>
+                </div>
+
+                <section>
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <h2 class="font-bold text-gray-800 text-sm tracking-tight">자주 찾는 서비스</h2>
+                        <span class="material-icons text-gray-400 text-lg">add</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-white p-3.5 rounded-xl flex items-center justify-between shadow-sm"><span class="text-[11px] font-bold text-gray-700">토지(임야)대장</span><span class="material-icons text-orange-400 text-xl">description</span></div>
+                        <div class="bg-white p-3.5 rounded-xl flex items-center justify-between shadow-sm"><span class="text-[11px] font-bold text-gray-700">주민등록등본(법인)</span><span class="material-icons text-blue-400 text-xl">article</span></div>
+                        <div class="bg-white p-3.5 rounded-xl flex items-center justify-between shadow-sm"><span class="text-[11px] font-bold text-gray-700">자동차등록원부</span><span class="material-icons text-indigo-400 text-xl">directions_car</span></div>
+                        <div class="bg-white p-3.5 rounded-xl flex items-center justify-between shadow-sm"><span class="text-[11px] font-bold text-gray-700">건축물대장</span><span class="material-icons text-yellow-500 text-xl">apartment</span></div>
+                        <div class="bg-white p-3.5 rounded-xl flex items-center justify-between shadow-sm"><span class="text-[11px] font-bold text-gray-700">가족관계증명서</span><span class="material-icons text-teal-400 text-xl">launch</span></div>
+                        <div class="bg-white p-3.5 rounded-xl flex items-center justify-between shadow-sm"><span class="text-[11px] font-bold text-gray-700">여권 재발급</span><span class="material-icons text-green-400 text-xl">edit_note</span></div>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <h2 class="font-bold text-gray-800 text-sm tracking-tight">혜택알리미</h2>
+                        <span class="material-icons text-gray-400 text-lg">chevron_right</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-white p-3.5 rounded-xl shadow-sm text-left"><p class="text-[11px] font-bold text-gray-700 truncate">급한 생활비, 대출 ...</p><span class="block text-[9px] text-gray-300 mt-1">···</span></div>
+                        <div class="bg-white p-3.5 rounded-xl shadow-sm text-left"><p class="text-[11px] font-bold text-gray-700 truncate">창업을 준비 중이라...</p><span class="block text-[9px] text-gray-300 mt-1">···</span></div>
+                        <div class="bg-white p-3.5 rounded-xl shadow-sm text-left"><p class="text-[11px] font-bold text-gray-700 truncate">혼자 살아도 든든하...</p><span class="block text-[9px] text-gray-300 mt-1">···</span></div>
+                        <div class="bg-white p-3.5 rounded-xl shadow-sm text-left"><p class="text-[11px] font-bold text-gray-700 truncate">양육 부담을 줄일 수...</p><span class="block text-[9px] text-gray-300 mt-1">···</span></div>
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <div class="flex items-center space-x-0.5 mb-3 px-1">
+                        <h2 class="font-bold text-gray-800 text-sm tracking-tight">생활가이드</h2>
+                        <span class="material-icons text-gray-400 text-base mt-0.5">chevron_right</span>
+                    </div>
+                    <div class="flex justify-between items-center text-center overflow-x-auto no-scrollbar space-x-2 pb-2">
+                        <div onclick="switchTab('wedding')" id="tab-wedding" class="tab-item flex-shrink-0 cursor-pointer text-blue-600 font-bold min-w-[52px]">
+                            <div class="tab-icon-box w-11 h-11 rounded-full border-2 border-blue-500 bg-blue-50 flex items-center justify-center mb-1 text-lg">💍</div>
+                            <span class="text-[10.5px]">결혼</span>
+                        </div>
+                        <div onclick="switchTab('moving')" id="tab-moving" class="tab-item flex-shrink-0 cursor-pointer text-gray-400 min-w-[52px]">
+                            <div class="tab-icon-box w-11 h-11 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center mb-1 text-lg">🏠</div>
+                            <span class="text-[10.5px]">이사</span>
+                        </div>
+                        <div onclick="switchTab('death')" id="tab-death" class="tab-item flex-shrink-0 cursor-pointer text-gray-400 min-w-[52px]">
+                            <div class="tab-icon-box w-11 h-11 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center mb-1 text-lg">💮</div>
+                            <span class="text-[10.5px]">사망</span>
+                        </div>
+                        <div onclick="switchTab('pregnancy')" id="tab-pregnancy" class="tab-item flex-shrink-0 cursor-pointer text-gray-400 min-w-[52px]">
+                            <div class="tab-icon-box w-11 h-11 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center mb-1 text-lg">🤰</div>
+                            <span class="text-[10.5px]">임신·출산</span>
+                        </div>
+                        <div onclick="switchTab('childcare')" id="tab-childcare" class="tab-item flex-shrink-0 cursor-pointer text-gray-400 min-w-[52px]">
+                            <div class="tab-icon-box w-11 h-11 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center mb-1 text-lg">🍼</div>
+                            <span class="text-[10.5px]">육아</span>
+                        </div>
+                        <div onclick="switchTab('welfare')" id="tab-welfare" class="tab-item flex-shrink-0 cursor-pointer text-gray-400 min-w-[52px]">
+                            <div class="tab-icon-box w-11 h-11 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center mb-1 text-lg">❤️</div>
+                            <span class="text-[10.5px]">보건·복지</span>
+                        </div>
+                    </div>
+                    <div id="tab-content" class="space-y-2 mt-2"></div>
+                </section>
+
+                <div onclick="openIdCard()" class="bg-white rounded-xl p-4 flex items-center justify-between shadow-sm border border-gray-100 cursor-pointer hover:bg-green-50">
+                    <div class="flex items-center space-x-3">
+                        <span class="material-icons text-green-600 bg-green-50 p-1 rounded-lg text-xl">phone_android</span>
+                        <span class="text-xs font-bold text-gray-700">주민등록증 모바일 확인 서비스</span>
+                    </div>
+                    <span class="material-icons text-gray-400 text-sm">chevron_right</span>
+                </div>
+            </main>
+        </div>
+
+        <div id="screen-verify" class="screen-content hidden flex-col flex-1 bg-[#f4f6f9] animate-fade-in overflow-y-auto no-scrollbar pb-24">
+            <header class="bg-white px-4 py-3 flex items-center justify-between border-b sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center space-x-2">
+                    <button onclick="changeTab('home')" class="material-icons text-gray-700 text-xl">chevron_left</button>
+                    <span class="font-bold text-gray-800 text-sm">진위확인</span>
+                </div>
+                <div class="flex items-center space-x-3 text-gray-600">
+                    <span class="material-icons text-xl">search</span>
+                    <span class="material-icons text-xl">menu</span>
+                </div>
+            </header>
+
+            <div class="p-4 space-y-3">
+                <div class="bg-white rounded-xl p-4 flex items-center space-x-3 border border-gray-100 shadow-sm text-left">
+                    <span class="material-icons text-blue-600 text-xl">qr_code_scanner</span>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold text-gray-800">스마트 경영(QR코드 진위확인)</h4>
+                    </div>
+                    <span class="material-icons text-gray-300 text-sm">chevron_right</span>
+                </div>
+                <div class="bg-white rounded-xl p-4 flex items-center space-x-3 border border-gray-100 shadow-sm text-left">
+                    <span class="material-icons text-blue-600 text-xl">record_voice_over</span>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold text-gray-800">음성변환 서비스</h4>
+                    </div>
+                    <span class="material-icons text-gray-300 text-sm">chevron_right</span>
+                </div>
+                <div class="bg-white rounded-xl p-4 flex items-center space-x-3 border border-gray-100 shadow-sm text-left">
+                    <span class="material-icons text-blue-600 text-xl">description</span>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold text-gray-800">인터넷발급문서 진위확인</h4>
+                    </div>
+                    <span class="material-icons text-gray-300 text-sm">chevron_right</span>
+                </div>
+                <div class="bg-white rounded-xl p-4 flex items-center space-x-3 border border-gray-100 shadow-sm text-left">
+                    <span class="material-icons text-blue-600 text-xl">settings_overscan</span>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold text-gray-800">스캔 설정</h4>
+                    </div>
+                    <span class="material-icons text-gray-300 text-sm">chevron_right</span>
+                </div>
+                <div class="bg-white rounded-xl p-4 flex items-center space-x-3 border border-gray-100 shadow-sm text-left">
+                    <span class="material-icons text-blue-600 text-xl">help_outline</span>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold text-gray-800">사용안내</h4>
+                    </div>
+                    <span class="material-icons text-gray-300 text-sm">chevron_right</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-topics" class="screen-content hidden flex-col flex-1 bg-[#f4f6f9] animate-fade-in overflow-y-auto no-scrollbar pb-24">
+            <header class="bg-white px-4 py-3 flex items-center justify-between border-b sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center space-x-2">
+                    <button onclick="changeTab('home')" class="material-icons text-gray-700 text-xl">chevron_left</button>
+                    <span class="font-bold text-gray-800 text-sm">주제별 보기</span>
+                </div>
+                <div class="flex items-center space-x-3 text-gray-600">
+                    <span class="material-icons text-xl">search</span>
+                    <span class="material-icons text-xl">menu</span>
+                </div>
+            </header>
+            
+            <div class="px-4 py-2 flex justify-between items-center text-[11px] text-gray-500 font-bold bg-white border-b">
+                <span>정렬기준</span>
+                <div class="flex items-center text-gray-700"><span>인기순</span><span class="material-icons text-xs">expand_more</span></div>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm text-left">
+                    <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">민원서비스</span>
+                    <h3 class="font-black text-gray-800 text-sm mt-2 mb-1 flex justify-between items-center">토지(임야)대장등본발급 <span class="material-icons text-gray-400 text-sm">chevron_right</span></h3>
+                    <p class="text-[11px] text-gray-400 leading-normal mb-4">토지나 임야의 소재, 지번, 지목, 면적, 소유자 등의 사항이 등록된 토지대장, 임야대장을 발...</p>
+                    <span class="text-[10px] text-gray-400 block mb-4">국토교통부</span>
+                    <button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-xs btn-active-scale transition-all">발급하기</button>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm text-left">
+                    <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">민원서비스</span>
+                    <h3 class="font-black text-gray-800 text-sm mt-2 mb-1 flex justify-between items-center">토지(임야)대장열람 <span class="material-icons text-gray-400 text-sm">chevron_right</span></h3>
+                    <p class="text-[11px] text-gray-400 leading-normal mb-4">토지나 임야의 소재, 지번, 지목, 면적, 소유자 등의 사항이 등록된 토지대장, 임야대장을 발...</p>
+                    <span class="text-[10px] text-gray-400 block mb-4">국토교통부</span>
+                    <button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-xs btn-active-scale transition-all">발급하기</button>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm text-left">
+                    <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">민원서비스</span>
+                    <h3 class="font-black text-gray-800 text-sm mt-2 mb-1 flex justify-between items-center">주민등록표 등본 발급 <span class="material-icons text-gray-400 text-sm">chevron_right</span></h3>
+                    <p class="text-[11px] text-gray-400 leading-normal mb-4">주민등록표 등본 또는 주민등록표 초본을 발급받기 위한 민원입니다. 주민등록표 등본에는...</p>
+                    <span class="text-[10px] text-gray-400 block mb-4">행정안전부 | 인증필요(본인)</span>
+                    <button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-xs btn-active-scale transition-all">발급하기</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-wallet" class="screen-content hidden flex-col flex-1 bg-[#f4f6f9] animate-fade-in overflow-y-auto no-scrollbar pb-24 relative">
+            <div class="bg-white grid grid-cols-4 text-center text-xs font-bold border-b text-gray-400 pt-3 sticky top-0 z-30">
+                <div class="pb-2 border-b-2 border-gray-900 text-gray-900">타임라인</div>
+                <div class="pb-2">신청자격</div>
+                <div class="pb-2">증명서</div>
+                <div class="pb-2">생활정보</div>
+            </div>
+
+            <div class="bg-amber-100 m-4 rounded-2xl p-4 flex justify-between items-center shadow-sm relative overflow-hidden">
+                <div class="text-left space-y-0.5 z-10">
+                    <span class="text-[10px] font-bold text-amber-700 bg-white/60 px-1.5 py-0.5 rounded">나를 위한 혜택</span>
+                    <h4 class="font-black text-xs text-gray-800 pt-1">혜택알리미가 알려드려요</h4>
+                </div>
+                <div class="w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center text-xl shadow-inner">🦁</div>
+            </div>
+
+            <div class="px-5 flex justify-between items-center mb-1 text-[11px] font-bold text-gray-400">
+                <div class="flex items-center space-x-1"><span class="material-icons text-sm">autorenew</span><span>전체</span></div>
+                <span class="material-icons text-base">tune</span>
+            </div>
+
+            <div class="p-4 space-y-2 text-left">
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-start space-x-3">
+                    <span class="material-icons text-amber-500 text-xl mt-0.5">wallet</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center"><span class="text-[10px] font-extrabold text-red-500 bg-red-50 px-1.5 py-0.2 rounded">중요</span><span class="text-[10px] text-gray-300">00:00 ♡</span></div>
+                        <h4 class="font-bold text-xs text-gray-800 mt-1">내 지갑</h4>
+                        <p class="text-[11px] text-gray-400 mt-0.5">정부디지털지갑 시범서비스 오픈</p>
+                    </div>
+                </div>
+                <div class="text-[10px] font-bold text-gray-400 px-1 pt-2 pb-1">26.05.27 수</div>
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-start space-x-3">
+                    <span class="material-icons text-blue-500 text-xl mt-0.5">support_agent</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.2 rounded">알림</span><span class="text-[10px] text-gray-300">21:44</span></div>
+                        <h4 class="font-bold text-xs text-gray-800 mt-1">국민비서 · 행정안전부</h4>
+                        <p class="text-[11px] text-gray-400 mt-0.5">서비스 신청완료 안내</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-24 left-4 right-4 bg-zinc-900/95 text-white rounded-xl p-3 text-center text-[10px] font-bold tracking-tight shadow-md z-40">
+                타임라인 접수일 기준 1년치 제공합니다.<br>
+                <span class="text-zinc-400 font-normal">이전 알림은 직접 날짜 선택해 주세요</span>
+            </div>
+        </div>
+
+        <div id="screen-id-card" class="screen-content hidden flex-col flex-1 bg-white p-4 animate-fade-in">
+            <div class="flex justify-between items-center py-2 mb-2">
+                <button onclick="changeTab('home')" class="material-icons text-gray-800 text-2xl font-bold">chevron_left</button>
+                <h1 class="font-bold text-gray-800 text-base">모바일신분증</h1>
+                <button onclick="openSettings()" class="material-icons text-gray-800 text-xl">menu</button>
+            </div>
+            <div class="flex border-b border-gray-200 mb-5 text-center text-sm font-bold">
+                <div class="flex-1 pb-2 border-b-2 border-gray-900 text-gray-900">주민등록증</div>
+                <div class="flex-1 pb-2 text-gray-300 font-medium">운전면허증</div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-xl p-5 flex flex-col relative flex-1 max-h-[550px]">
+                <div class="w-40 h-[210px] bg-gray-50 rounded-md overflow-hidden mx-auto mb-6 shadow-inner border border-gray-100 flex items-center justify-center">
+                    <img id="view-photo" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300" class="w-full h-full object-cover">
+                </div>
+                <div class="flex justify-between items-start w-full px-2 mb-6">
+                    <div class="space-y-1.5 text-left pt-1">
+                        <h2 id="view-name" class="font-black text-2xl text-gray-900 tracking-wide">설성훈</h2>
+                        <p id="view-birth" class="text-[13px] font-bold text-gray-700 tracking-wider">06.07.24</p>
+                        <p id="view-address" class="text-xs font-semibold text-gray-500 leading-tight">부산광역시 ****</p>
+                    </div>
+                    <div class="w-24 h-24 bg-white border border-gray-200 p-1.5 rounded-xl flex items-center justify-center shadow-sm">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=v%3DGOV24_ID_060724_SECURE_AUTH_DATA%26t%3D1716819700%26hash%3D8f4e2c" class="w-full h-full object-contain">
+                    </div>
+                </div>
+
+                <div class="w-full px-2 mb-6 mt-auto">
+                    <div class="w-full bg-gray-200 h-[5px] rounded-full overflow-hidden">
+                        <div id="timer-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full w-full"></div>
+                    </div>
+                    <div class="flex items-center text-[11px] text-gray-400 mt-2 font-medium pl-0.5">
+                        <span>남은시간&nbsp;</span><span id="timer-text" class="text-cyan-500 font-bold">30초</span>
+                    </div>
+                </div>
+
+                <button id="btn-instant-trigger" 
+                        class="w-full bg-[#222] text-white text-center py-4 rounded-xl text-xs font-bold tracking-wide shadow-sm btn-active-scale transition-all select-none touch-none"
+                        style="-webkit-user-select: none; -webkit-touch-callout: none;">
+                        상세정보 표시
+                </button>
+            </div>
+        </div>
+
+        <div id="screen-settings" class="screen-content hidden flex-col flex-1 bg-white p-5 animate-fade-in">
+            <div class="flex items-center mb-6"><button onclick="changeTab('home')" class="material-icons text-gray-700 mr-2">close</button><h1 class="text-lg font-bold">정보 및 사진 설정</h1></div>
+            <div class="space-y-4 flex-1">
+                <div onclick="triggerFileInput()" class="border-2 border-dashed border-gray-200 rounded-xl p-5 bg-gray-50 text-center cursor-pointer"><span class="material-icons text-gray-400 text-3xl mb-1">photo_camera</span><p class="text-xs font-bold text-gray-600" id="upload-status-text">사진 수정하기</p><input type="file" id="input-photo-file" accept="image/*" class="hidden" onchange="previewLocalImage(this)"></div>
+                <div class="flex flex-col"><label class="text-xs font-bold text-gray-400 mb-1">이름</label><input type="text" id="input-name" value="설성훈" class="w-full p-3 border rounded-xl font-medium text-sm"></div>
+                <div class="flex flex-col"><label class="text-xs font-bold text-gray-400 mb-1">생년월일</label><input type="text" id="input-birth" value="06.07.24" class="w-full p-3 border rounded-xl font-medium text-sm"></div>
+                <div class="flex flex-col"><label class="text-xs font-bold text-blue-500 mb-1">모바일 신분증 노출 주소 (계속 변경 가능)</label><input type="text" id="input-address" value="부산광역시 기장군 정관읍" class="w-full p-3 border-2 border-blue-200 rounded-xl font-bold text-sm text-gray-800 focus:border-blue-500 focus:outline-none"></div>
+            </div>
+            <button onclick="saveSettings()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-sm shadow-md mt-6">수정 데이터 적용하기</button>
+        </div>
+
+        <div id="main-bottom-navbar" class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2.5 text-[10px] text-gray-400 z-[100] select-none shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+            <div onclick="changeTab('wallet')" id="nav-wallet" class="nav-btn flex flex-col items-center space-y-0.5 cursor-pointer transition-colors">
+                <span class="material-icons text-xl">wallet</span><span>내 지갑</span>
+            </div>
+            <div onclick="changeTab('topics')" id="nav-topics" class="nav-btn flex flex-col items-center space-y-0.5 cursor-pointer transition-colors">
+                <span class="material-icons text-xl">grid_view</span><span>주제별 보기</span>
+            </div>
+            <div onclick="changeTab('verify')" id="nav-verify" class="nav-btn flex flex-col items-center space-y-0.5 cursor-pointer transition-colors">
+                <span class="material-icons text-xl">receipt</span><span>문서진위확인</span>
+            </div>
+            <div onclick="changeTab('home')" id="nav-home" class="nav-btn flex flex-col items-center space-y-0.5 cursor-pointer transition-colors">
+                <span class="material-icons text-xl">home</span><span>홈으로</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let selectedImageBase64 = null;
+        let cardTimerInterval = null;
+        let timeLeft = 30;
+        let configuredAddress = "부산광역시 기장군 정관읍";
+
+        const guideData = {
+            wedding: ["누군가와 결혼할 때", "외국인과 결혼할 때"],
+            moving: ["이사를 할 때", "셀프등기를 하려고 할 때"],
+            death: ["누군가가 돌아가셨을 때(유족이 있는 경우)", "상속을 할 때"],
+            pregnancy: ["아이를 갖고자 할 때", "임신에 어려움을 겪을 때"],
+            childcare: ["아이를 양육할 때", "아이를 어린이집에 보내려고 할 때"],
+            welfare: ["치매가 의심될 때", "돌봄이 필요할 때(노인)"]
+        };
+
+        function syncStatus() {
+            const now = new Date();
+            let h = now.getHours(); let m = now.getMinutes();
+            document.getElementById('realtime-clock').innerText = `${h<10?'0'+h:h}:${m<10?'0'+m:m}`;
+        }
+        setInterval(syncStatus, 1000); syncStatus();
+
+        function changeTab(id) {
+            document.querySelectorAll('.screen-content').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-blue-600', 'font-bold'); b.classList.add('text-gray-400'); });
+
+            const target = document.getElementById(`screen-${id}`);
+            if (target) target.classList.remove('hidden');
+
+            const nav = document.getElementById(`nav-${id}`);
+            if (nav) { nav.classList.remove('text-gray-400'); nav.classList.add('text-blue-600', 'font-bold'); }
+
+            const navbar = document.getElementById('main-bottom-navbar');
+            if (id === 'id-card') {
+                navbar.classList.add('hidden');
+                startIdTimer();
+            } else {
+                navbar.classList.remove('hidden');
+                stopIdTimer();
+            }
+        }
+
+        function switchTab(key) {
+            document.querySelectorAll('.tab-item').forEach(i => { i.classList.remove('text-blue-600', 'font-bold'); i.classList.add('text-gray-400'); });
+            document.querySelectorAll('.tab-icon-box').forEach(b => { b.classList.remove('border-blue-500', 'bg-blue-50', 'border-2'); b.classList.add('border-gray-100', 'bg-gray-50', 'border'); });
+
+            const actTab = document.getElementById(`tab-${key}`);
+            if (actTab) { actTab.classList.remove('text-gray-400'); actTab.classList.add('text-blue-600', 'font-bold'); actTab.querySelector('.tab-icon-box').classList.add('border-blue-500', 'bg-blue-50', 'border-2'); }
+
+            const content = document.getElementById('tab-content');
+            let html = '';
+            guideData[key].forEach(t => {
+                html += `<div class="flex justify-between items-center py-3.5 px-4 bg-gray-50 rounded-xl border border-gray-100/50"><span class="text-[11px] text-gray-700 font-bold">${t}</span><span class="material-icons text-gray-400 text-sm">chevron_right</span></div>`;
+            });
+            content.innerHTML = html;
+        }
+
+        function startIdTimer() {
+            clearInterval(cardTimerInterval); timeLeft = 30;
+            const bar = document.getElementById('timer-bar');
+            const txt = document.getElementById('timer-text');
+            bar.style.transition = 'none'; bar.style.width = '100%';
+            setTimeout(() => { bar.style.transition = 'width 1s linear'; }, 50);
+            cardTimerInterval = setInterval(() => {
+                timeLeft--; if (timeLeft < 0) { timeLeft = 30; bar.style.transition = 'none'; bar.style.width = '100%'; setTimeout(() => { bar.style.transition = 'width 1s linear'; }, 50); }
+                txt.innerText = timeLeft + "초"; bar.style.width = (timeLeft / 30 * 100) + "%";
+            }, 1000);
+        }
+        function stopIdTimer() { clearInterval(cardTimerInterval); }
+
+        const instantBtn = document.getElementById('btn-instant-trigger');
+        const addrDisplay = document.getElementById('view-address');
+
+        function revealAddressInstant(e) {
+            e.preventDefault();
+            addrDisplay.innerText = configuredAddress;
+            addrDisplay.className = "text-xs font-black text-blue-600 transition-all duration-75 scale-105 origin-left";
+            instantBtn.classList.remove('bg-[#222]');
+            instantBtn.classList.add('bg-blue-600');
+        }
+
+        function hideAddressInstant(e) {
+            e.preventDefault();
+            addrDisplay.innerText = "부산광역시 ****";
+            addrDisplay.className = "text-xs font-semibold text-gray-500 transition-all duration-75 scale-100";
+            instantBtn.className = "w-full bg-[#222] text-white text-center py-4 rounded-xl text-xs font-bold tracking-wide shadow-sm btn-active-scale transition-all select-none touch-none";
+        }
+
+        instantBtn.addEventListener('mousedown', revealAddressInstant);
+        instantBtn.addEventListener('touchstart', revealAddressInstant);
+        instantBtn.addEventListener('mouseup', hideAddressInstant);
+        instantBtn.addEventListener('touchend', hideAddressInstant);
+        instantBtn.addEventListener('mouseleave', hideAddressInstant);
+
+        function triggerFileInput() { document.getElementById('input-photo-file').click(); }
+
+        // [버그 수정 핵심 1] 업로드한 고용량 이미지를 HTML5 Canvas를 이용해 축소 및 JPEG 압축(용량 다이어트)
+        function previewLocalImage(i) { 
+            if (i.files && i.files[0]) { 
+                const r = new FileReader(); 
+                r.onload = e => { 
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // 신분증 표시에 최적화된 크기 (가로 300px로 리사이징)
+                        const maxWidth = 300;
+                        const scale = maxWidth / img.width;
+                        canvas.width = maxWidth;
+                        canvas.height = img.height * scale;
+                        
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // 압축률을 0.7(70%)로 지정하여 데이터 크기를 수십 KB 단위로 축소
+                        selectedImageBase64 = canvas.toDataURL('image/jpeg', 0.7); 
+                        document.getElementById('upload-status-text').innerText = "✅ 프로필 연동 완료"; 
+                    };
+                    img.src = e.target.result;
+                }; 
+                r.readAsDataURL(i.files[0]); 
+            } 
+        }
+
+        function openSettings() { changeTab('settings'); }
+        function openIdCard() { changeTab('id-card'); }
+
+        // [버그 수정 핵심 2] 안전하게 예외처리(try-catch)를 하여 저장소 안정성 확보
+        function saveSettings() {
+            const name = document.getElementById('input-name').value || "설성훈";
+            const birth = document.getElementById('input-birth').value || "06.07.24";
+            configuredAddress = document.getElementById('input-address').value || "부산광역시 기장군 정관읍";
+            
+            document.getElementById('view-name').innerText = name;
+            document.getElementById('view-birth').innerText = birth;
+            
+            if (selectedImageBase64) {
+                document.getElementById('view-photo').src = selectedImageBase64;
+            }
+            
+            addrDisplay.innerText = "부산광역시 ****";
+            addrDisplay.className = "text-xs font-semibold text-gray-500";
+
+            try {
+                // 브라우저 보관함에 안전하게 저장
+                localStorage.setItem('gov24_name', name);
+                localStorage.setItem('gov24_birth', birth);
+                localStorage.setItem('gov24_address', configuredAddress);
+                
+                if (selectedImageBase64) {
+                    localStorage.setItem('gov24_photo', selectedImageBase64); 
+                }
+            } catch (error) {
+                console.error("데이터 저장 실패:", error);
+                alert("알림: 임시 저장공간이 부족하거나 보안 설정으로 인해 저장이 차단되었습니다.");
+            }
+            
+            changeTab('id-card');
+        }
+
+        function loadSettings() {
+            try {
+                const savedName = localStorage.getItem('gov24_name');
+                const savedBirth = localStorage.getItem('gov24_birth');
+                const savedAddress = localStorage.getItem('gov24_address');
+                const savedPhoto = localStorage.getItem('gov24_photo');
+
+                if (savedName) {
+                    document.getElementById('input-name').value = savedName;
+                    document.getElementById('view-name').innerText = savedName;
+                }
+                if (savedBirth) {
+                    document.getElementById('input-birth').value = savedBirth;
+                    document.getElementById('view-birth').innerText = savedBirth;
+                }
+                if (savedAddress) {
+                    document.getElementById('input-address').value = savedAddress;
+                    configuredAddress = savedAddress;
+                }
+                if (savedPhoto) {
+                    selectedImageBase64 = savedPhoto;
+                    document.getElementById('view-photo').src = savedPhoto;
+                    document.getElementById('upload-status-text').innerText = "✅ 프로필 연동 완료";
+                }
+            } catch (e) {
+                console.error("데이터 로드 실패:", e);
+            }
+        }
+
+        function executeSearch() { const q = document.getElementById('google-search-input').value; if (q) window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank'); }
+
+        window.onload = () => {
+            loadSettings(); 
+            switchTab('wedding');
+            changeTab('home');
+        };
+    </script>
+</body>
+</html>
